@@ -6,7 +6,11 @@
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/EffectGameObject.hpp>
 #include <Geode/modify/HardStreak.hpp>
+#ifdef GEODE_IS_WINDOWS
 #include <Windows.h>
+#endif
+#include <Geode/loader/Dispatch.hpp>
+#include <Geode/ui/GeodeUI.hpp>
 #include <cstdio>
 #include <algorithm>
 
