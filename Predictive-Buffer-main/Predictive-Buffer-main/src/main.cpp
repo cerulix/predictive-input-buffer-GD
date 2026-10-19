@@ -13,6 +13,7 @@
 #include <Geode/ui/GeodeUI.hpp>
 #include <cstdio>
 #include <algorithm>
+#include <Geode/modify/CCKeyboardDispatcher.hpp>
 
 using namespace geode::prelude;
 
