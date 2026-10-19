@@ -8,17 +8,8 @@ on:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - name: Windows
-            os: windows-latest
-          - name: macOS
-            os: macos-latest
-
-    name: ${{ matrix.config.name }}
-    runs-on: ${{ matrix.config.os }}
+    name: macOS
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
