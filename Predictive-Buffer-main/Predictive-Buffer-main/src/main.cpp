@@ -443,10 +443,19 @@ public:
         PlayLayer* pl = PlayLayer::get();
         if (!pl || player != pl->m_player1) return;
 
-        // Check F6 before m_enabled check so you can always cycle back ON when it is OFF!
-        if (GetAsyncKeyState(VK_F6) & 1) {
-            cyclePreset();
-        }
+        #include <Geode/modify/CCKeyboardDispatcher.hpp>
+
+        static bool s_f6Pressed = false;
+
+        class $modify(BufKeyboard, cocos2d::CCKeyboardDispatcher) {
+            bool dispatchKeyboardMSG(cocos2d::enumKeyCodes key, bool down, bool repeat) {
+                if (down && !repeat && key == cocos2d::KEY_F6) s_f6Pressed = true;
+                return cocos2d::CCKeyboardDispatcher::dispatchKeyboardMSG(key, down, repeat);
+            }
+        };
+
+        // then in onPlayerUpdate:
+        if (s_f6Pressed) { s_f6Pressed = false; cyclePreset(); }
 
         if (!m_enabled) return;
 
@@ -500,15 +509,13 @@ public:
 static TrajectoryBufferSim s_sim;
 
 $on_mod(Loaded) {
+    #ifdef GEODE_IS_WINDOWS
     AllocConsole();
     FILE* f;
     freopen_s(&f, "CONOUT$", "w", stdout);
     SetConsoleTitleA("Geode Predictive Input Buffer - Live Console");
-    printf("============================================================\n");
-    printf(" [InputBuffer] v4.6 LOADED (Wave Spikes/Saws Trajectory Fix)\n");
-    printf(" [InputBuffer] Starting Mode: STAGE 1 (2 All / 2 Wave)\n");
-    printf(" [InputBuffer] Press F6 in-level to cycle: 2/2 -> 4/4 -> 8/8 -> 16/8 -> OFF\n");
-    printf("============================================================\n");
+#endif
+    log::info("[InputBuffer] v4.6 loaded");
 }
 
 class $modify(BufPlayLayer, PlayLayer) {
