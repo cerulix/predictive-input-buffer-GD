@@ -13,7 +13,6 @@
 #include <Geode/ui/GeodeUI.hpp>
 #include <cstdio>
 #include <algorithm>
-#include <Geode/modify/CCKeyboardDispatcher.hpp>
 
 using namespace geode::prelude;
 
@@ -449,9 +448,9 @@ public:
         static bool s_f6Pressed = false;
 
         class $modify(BufKeyboard, cocos2d::CCKeyboardDispatcher) {
-            bool dispatchKeyboardMSG(cocos2d::enumKeyCodes key, bool down, bool repeat) {
+            bool dispatchKeyboardMSG(cocos2d::enumKeyCodes key, bool down, bool repeat, double timestamp) {
                 if (down && !repeat && key == cocos2d::KEY_F6) s_f6Pressed = true;
-                return cocos2d::CCKeyboardDispatcher::dispatchKeyboardMSG(key, down, repeat);
+                return cocos2d::CCKeyboardDispatcher::dispatchKeyboardMSG(key, down, repeat, timestamp);
             }
         };
 
