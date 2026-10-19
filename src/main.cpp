@@ -6,15 +6,26 @@
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/EffectGameObject.hpp>
 #include <Geode/modify/HardStreak.hpp>
+#include <Geode/modify/CCKeyboardDispatcher.hpp>
 #ifdef GEODE_IS_WINDOWS
 #include <Windows.h>
 #endif
-#include <Geode/loader/Dispatch.hpp>
-#include <Geode/ui/GeodeUI.hpp>
 #include <cstdio>
 #include <algorithm>
 
 using namespace geode::prelude;
+
+#ifndef GEODE_IS_WINDOWS
+// Non-Windows F6 handling (Windows uses GetAsyncKeyState instead)
+static bool s_f6Pressed = false;
+
+class $modify(BufKeyboard, cocos2d::CCKeyboardDispatcher) {
+    bool dispatchKeyboardMSG(cocos2d::enumKeyCodes key, bool down, bool repeat, double timestamp) {
+        if (down && !repeat && key == cocos2d::KEY_F6) s_f6Pressed = true;
+        return cocos2d::CCKeyboardDispatcher::dispatchKeyboardMSG(key, down, repeat, timestamp);
+    }
+};
+#endif
 
 // ============================================================================
 //  USER SETTINGS
@@ -143,31 +154,31 @@ public:
                 m_enabled = true;
                 m_maxTicksNormal = 2;
                 m_maxTicksWave = 2;
-                printf("[InputBuffer] F6 Cycle -> STAGE 1: 2 Ticks All | 2 Ticks Wave (0.5f @ 60fps)\n");
+                log::info("[InputBuffer] F6 Cycle -> STAGE 1: 2 Ticks All | 2 Ticks Wave (0.5f @ 60fps)");
                 break;
             case 1:
                 m_enabled = true;
                 m_maxTicksNormal = 4;
                 m_maxTicksWave = 4;
-                printf("[InputBuffer] F6 Cycle -> STAGE 2: 4 Ticks All | 4 Ticks Wave (1.0f @ 60fps)\n");
+                log::info("[InputBuffer] F6 Cycle -> STAGE 2: 4 Ticks All | 4 Ticks Wave (1.0f @ 60fps)");
                 break;
             case 2:
                 m_enabled = true;
                 m_maxTicksNormal = 8;
                 m_maxTicksWave = 8;
-                printf("[InputBuffer] F6 Cycle -> STAGE 3: 8 Ticks All | 8 Ticks Wave (2.0f @ 60fps)\n");
+                log::info("[InputBuffer] F6 Cycle -> STAGE 3: 8 Ticks All | 8 Ticks Wave (2.0f @ 60fps)");
                 break;
             case 3:
                 m_enabled = true;
                 m_maxTicksNormal = 16;
                 m_maxTicksWave = 8;
-                printf("[InputBuffer] F6 Cycle -> STAGE 4: 16 Ticks All | 8 Ticks Wave (4.0f / 2.0f @ 60fps)\n");
+                log::info("[InputBuffer] F6 Cycle -> STAGE 4: 16 Ticks All | 8 Ticks Wave (4.0f / 2.0f @ 60fps)");
                 break;
             case 4:
                 m_enabled = false;
                 m_maxTicksNormal = 0;
                 m_maxTicksWave = 0;
-                printf("[InputBuffer] F6 Cycle -> STAGE 5: OFF (100%% Raw Input)\n");
+                log::info("[InputBuffer] F6 Cycle -> STAGE 5: OFF (100% Raw Input)");
                 break;
         }
     }
@@ -443,19 +454,17 @@ public:
         PlayLayer* pl = PlayLayer::get();
         if (!pl || player != pl->m_player1) return;
 
-        #include <Geode/modify/CCKeyboardDispatcher.hpp>
-
-        static bool s_f6Pressed = false;
-
-        class $modify(BufKeyboard, cocos2d::CCKeyboardDispatcher) {
-            bool dispatchKeyboardMSG(cocos2d::enumKeyCodes key, bool down, bool repeat, double timestamp) {
-                if (down && !repeat && key == cocos2d::KEY_F6) s_f6Pressed = true;
-                return cocos2d::CCKeyboardDispatcher::dispatchKeyboardMSG(key, down, repeat, timestamp);
-            }
-        };
-
-        // then in onPlayerUpdate:
-        if (s_f6Pressed) { s_f6Pressed = false; cyclePreset(); }
+        // Check F6 before m_enabled check so you can always cycle back ON when it is OFF!
+#ifdef GEODE_IS_WINDOWS
+        if (GetAsyncKeyState(VK_F6) & 1) {
+            cyclePreset();
+        }
+#else
+        if (s_f6Pressed) {
+            s_f6Pressed = false;
+            cyclePreset();
+        }
+#endif
 
         if (!m_enabled) return;
 
@@ -509,7 +518,7 @@ public:
 static TrajectoryBufferSim s_sim;
 
 $on_mod(Loaded) {
-    #ifdef GEODE_IS_WINDOWS
+#ifdef GEODE_IS_WINDOWS
     AllocConsole();
     FILE* f;
     freopen_s(&f, "CONOUT$", "w", stdout);
